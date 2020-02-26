@@ -5,16 +5,22 @@ import matplotlib.pyplot as plt
 import pickle
 from matplotlib import style
 import time
-from PIL import Image
+import pprint
+import csv
+import Blob
+import BLACK
+import WHITE
+
+
 
 im = cv2.imread("smile_test.png")
-
-
 style.use("ggplot")
 
 h, w, _ = im.shape
 SIZE_x = w
 SIZE_y = h
+
+start_q_table = None #or filename
 
 HM_EPISODES = 100
 
@@ -24,7 +30,7 @@ WHITE_PENALTY = 300
 
 epsilon = 0.9
 EPS_DECAY = 0.9998
-SHOW_EVERY = 3000
+SHOW_EVERY = 100
 
 start_q_table = None
 
@@ -41,68 +47,24 @@ d = {
     3:(255, 255, 255)    #White
     }
 
-
-class Blob:
-    def __init__(self):
-        self.x = np.random.randint(0, SIZE_x)
-        self.y = np.random.randint(0, SIZE_y)
-
-    def __str__(self):
-        return f"{self.x}, {self.y}"
-
-    def __sub__(self, other):
-        return (self.x - other.x, self.y - other.y) #?
-
-    def action(self, choice):
-        #up
-        if choice == 0:
-            self.move(x=0, y=1)
-        #down
-        elif choice == 1:
-            self.move(x=0, y=-1)
-        #left
-        elif choice == 2:
-            self.move(x=-1, y=0)
-        #right
-        elif choice == 3:
-            self.move(x=1, y=0)
-
-    def move(self, x=False, y=False):
-        # x=False
-        if not x:
-            self.x += np.random.randint(-1, 2)
-        else:
-            self.x += x
-        # y=False
-        if not y:
-            self.y += np.random.randint(-1, 2)
-        else:
-            self.y += y
-
-        if self.x < 0:
-            self.x = 0
-        elif self.x > SIZE_x -1:
-            self.x = SIZE_x -1
-        if self.y < 0:
-            self.y = 0
-        elif self.y > SIZE_y -1:
-            self.y = SIZE_y -1
-
 if start_q_table is None:
-    q_table = {}
-    for x1 in range(-SIZE_x+1, SIZE_x):
-        for y1 in range(-SIZE_y+1, SIZE_y):
-            for x2 in range(-SIZE_x+1, SIZE_x):
-                for y2 in range(-SIZE_y+1, SIZE_y):
+    q_table = []
+    for x1 in range(-w+1, w):
+        for y1 in range(-h+1, h):
+            for x2 in range(-w+1, w):
+                for y2 in range(-h+1, h):
                     q_table[((x1, y1), (x2, y2))] = [np.random.uniform(-5, 0) for i in range(4)]
+
 else:
     with open(start_q_table, "rb") as f: #rb means read the binary file
         q_table = pickle.load(f)
 
+print("dupa")
+
 for episode in range(HM_EPISODES):
-    agent = Blob()
-    black_point = Blob()
-    white_point = Blob()
+    agent = Blob.Blob()
+    black_point = BLACK.Black()
+    white_point = WHITE.White()
 
     episode_reward = []
     if episode % SHOW_EVERY == 0:
@@ -124,13 +86,26 @@ for episode in range(HM_EPISODES):
             action = np.random.randint(0, 4)
 
     agent.action(action)
+    count_black = 0
+    count_white = 0
 
     if agent.x == black_point.x and agent.y == black_point.y:
         reward = BLACK_REWARD
+        count_black += 1
+
     elif agent.x == white_point.x and agent.y == white_point.y:
         reward = -WHITE_PENALTY
+        count_white += 1
+
     else:
         reward = -MOVE_PENALTY
+
+    if count_black >=500:
+        print("black")
+        break
+    elif count_white >=3000:
+        print("white")
+        break
 
     new_obs = (agent - black_point, agent - white_point)
     max_future_q = np.max(q_table[new_obs])
@@ -138,11 +113,15 @@ for episode in range(HM_EPISODES):
 
     if reward == BLACK_REWARD:
         new_q = BLACK_REWARD
+        episode_reward.append(reward)
     elif reward == -WHITE_PENALTY:
         new_q = -WHITE_PENALTY
+        episode_reward.append(reward)
     else:
         new_q =(1 - LEARNING_RATE) * current_q + LEARNING_RATE * (reward + DISCOUNT * max_future_q)
+        episode_reward.append(reward)
 
+    print(episode_reward)
     q_table[obs][action] = new_q
 
     if show:
@@ -161,7 +140,16 @@ for episode in range(HM_EPISODES):
                 if cv2.waitKey(1) & 0xFF == ord("q"):
                     break
 
-    episode_reward.append(episode_reward)
+
     epsilon *= EPS_DECAY
 
+print(episode_reward)
+# moving_avg = np.convolve(episode_reward, np.ones((SHOW_EVERY,)) / SHOW_EVERY, mode = "valid")
 
+# plt.plot([i for i in range(len(moving_avg))], moving_avg)
+# plt.ylabel(f"reward {SHOW_EVERY}ma")
+# plt.xlabel("episode #")
+# plt.show()
+
+plt.plot(Blob.agent_plot)
+plt.show()

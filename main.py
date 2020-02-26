@@ -5,13 +5,14 @@ import matplotlib.pyplot as plt
 import pickle
 from matplotlib import style
 import time
+import Blob
 
 #ggplot:make the table to plot
 style.use("ggplot")
 
 SIZE = 10
 #how many episodes
-HM_EPISODES = 15000
+HM_EPISODES = 1000
 MOVE_PENALTY = 1
 ENEMY_PENALTY = 300
 FOOD_REWARD = 25
@@ -19,7 +20,7 @@ FOOD_REWARD = 25
 epsilon = 0.9
 EPS_DECAY = 0.9998
 #how often show
-SHOW_EVERY = 3000
+SHOW_EVERY = 100
 
 start_q_table = None #or filename
 
@@ -37,48 +38,6 @@ d = {
     3:(0, 0, 255)    #Red
     }
 
-class Blob:
-    def __init__(self):
-        self.x = np.random.randint(0, SIZE)
-        self.y = np.random.randint(0, SIZE)
-
-    def __str__(self):
-        #how to show the string
-        return f"{self.x}, {self.y}"
-    #set the subtraction
-    def __sub__(self, other):
-        return (self.x - other.x, self.y - other.y)
-
-    def action(self, choice):
-        if choice == 0:
-            self.move(x=1, y=1)
-        elif choice == 1:
-            self.move(x=-1, y=-1)
-        elif choice == 2:
-            self.move(x=-1, y=1)
-        elif choice == 3:
-            self.move(x=1, y=-1)
-
-    def move(self, x=False, y=False):
-        # x=False
-        if not x:
-            self.x += np.random.randint(-1, 2)
-        else:
-            self.x += x
-        # y=False
-        if not y:
-            self.y += np.random.randint(-1, 2)
-        else:
-            self.y += y
-
-        if self.x < 0:
-            self.x = 0
-        elif self.x > SIZE -1:
-            self.x = SIZE -1
-        if self.y < 0:
-            self.y = 0
-        elif self.y > SIZE -1:
-            self.y = SIZE -1
 
 if start_q_table is None:
     q_table = {}
@@ -92,9 +51,9 @@ else:
         q_table = pickle.load(f)
 
 for episode in range(HM_EPISODES):
-    player = Blob()
-    food = Blob()
-    enemy = Blob()
+    player = Blob.Blob()
+    food = Blob.Blob()
+    enemy = Blob.Blob()
 
     episode_reward = []
     if episode % SHOW_EVERY == 0:
@@ -122,11 +81,16 @@ for episode in range(HM_EPISODES):
 
         if player.x == enemy.x and player.y == enemy.y:
             reward = -ENEMY_PENALTY
+
             episode_reward.append(reward)
+
 
         elif player.x == food.x and player.y == food.y:
             reward = FOOD_REWARD
+
             episode_reward.append(reward)
+
+
         else:
             reward = -MOVE_PENALTY
             episode_reward.append(reward)
@@ -177,5 +141,3 @@ plt.ylabel(f"reward {SHOW_EVERY}ma")
 plt.xlabel("episode #")
 plt.show()
 
-with open(f"qtable-{int(time.time())}.pickle", "wb") as f:
-    pickle.dump(q_table, f)
