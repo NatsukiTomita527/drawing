@@ -67,7 +67,6 @@ for episode in range(HM_EPISODES):
 
     episode_reward = []
     for i in range(200):
-        print(type(food))
         #observation
         obs = (player - food, player - enemy)
         if np.random.random() > epsilon:
