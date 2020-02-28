@@ -7,6 +7,7 @@ SIZE_x = w
 SIZE_y = h
 
 class Blob:
+
     def __init__(self):
         self.x = np.random.randint(0, w)
         self.y = np.random.randint(0, h)
@@ -20,7 +21,7 @@ class Blob:
         return (self.x - other.x, self.y - other.y)
 
     def action(self, choice):
-        agent_plot = []
+
         if choice == 0:
             self.move(x=1, y=1)
         elif choice == 1:
@@ -29,7 +30,10 @@ class Blob:
             self.move(x=-1, y=1)
         elif choice == 3:
             self.move(x=1, y=-1)
-        agent_plot.append([self.x, self.y])
+
+
+
+
 
     def move(self, x=False, y=False):
         # x=False
@@ -51,3 +55,4 @@ class Blob:
             self.y = 0
         elif self.y > h -1:
             self.y = h -1
+

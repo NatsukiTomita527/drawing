@@ -8,22 +8,20 @@ SIZE_y = h
 
 
 class White:
-    def __init__(self):
-        xy_black = []
-        with open('xy_smile.csv') as f:
-            reader = csv.reader(f)
-            l = [row for row in reader]
-            xy_black += ([[int(v) for v in row] for row in l])
-
         def __init__(self):
+            xy_white = []
+            with open('xy_smile.csv') as f:
+                reader = csv.reader(f)
+                l = [row for row in reader]
+                xy_white += ([[int(v) for v in row] for row in l])
             xy_white_true = []
             for i in range(w):
                 for j in range(h):
 
                     # if the pixel is black, create new `food` and add this food to the list
-                    if [i, j] not in xy_black:
+                    if [i, j] not in xy_white:
                         xy_white_true.append([i, j])
 
             for i in range(len(xy_white_true)):
-                self.x[i] = xy_white_true[0][i]
-                self.y[i] = xy_white_true[1][i]
+                self.x = (xy_white_true[i])[0]
+                self.y = (xy_white_true[i])[1]
